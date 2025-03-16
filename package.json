@@ -1,0 +1,20 @@
+{
+  "name": "ads_module",
+  "type": "commonjs",
+  "version": "1.0.0",
+  "description": "this is an backend for the advertisment module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "shivang_4857",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "cron": "^4.1.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongoose": "^8.12.1",
+    "node-cron": "^3.0.3"
+  }
+}
