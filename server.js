@@ -1,32 +1,42 @@
 require("dotenv").config();
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const cron = require("node-cron");
 
-const advertiserRoutes = require("./routes/advertiserRoutes");
-const campaignRoutes = require("./routes/campaignRoutes");
-const Advertiser = require("./models/Advertiser");
+// server.js
+const express = require('express');
+const mongoose = require('mongoose');
+const cron = require('node-cron'); // Required for scheduling tasks
+const campaignRoutes = require('./routes/campaignRoutes');
+const walletRoutes = require('./routes/walletRoutes');
+const Campaign = require('./models/Campaign'); // For resetting campaign spend
 
 const app = express();
 app.use(express.json());
-app.use(cors());
 
+// Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
+    useNewUrlParser: true,
+    useUnifiedTopology: true
 })
-  .then(() => console.log("MongoDB Connected"))
-  .catch(err => console.log(err));
+.then(() => console.log('MongoDB connected'))
+.catch(err => console.error(err));
 
-app.use("/api/advertisers", advertiserRoutes);
-app.use("/api/campaigns", campaignRoutes);
+// Use routes
+app.use('/api/campaigns', campaignRoutes);
+app.use('/api/wallet', walletRoutes);
 
-// Daily reset cron job (runs at midnight to reset dailySpent for all advertisers)
-cron.schedule("0 0 * * *", async () => {
-  await Advertiser.updateMany({}, { dailySpent: 0 });
-  console.log("Daily spending limits reset.");
+// Cron Job: Reset campaign spend at midnight every day
+cron.schedule('0 0 * * *', async () => {
+    try {
+        // Reset the metrics.spend for all active campaigns and update the lastReset time
+        await Campaign.updateMany(
+            { status: 'active' },
+            { $set: { 'metrics.spend': 0, lastReset: new Date() } }
+        );
+        console.log('Daily campaign spend reset complete.');
+    } catch (error) {
+        console.error('Error resetting daily campaign spend:', error);
+    }
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
